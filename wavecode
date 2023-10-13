@@ -1,0 +1,78 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+float getLength(int eumpyo) {
+	float T=0;
+	if (eumpyo == 4) T = 1.0;
+	else if (eumpyo == 5) T = 1.5;
+	else if (eumpyo == 8) T =0.5 ; // 8분음표는 0.5초
+	else if (eumpyo == 10) T = 3; //
+
+	return T;
+}
+float getfrequency(char name) {
+	float T;
+	if (name == 'K') T = 247; // B. (시)
+	else if (name == 'C') T = 262; // C (도)
+	else if (name == 'D') T = 294; // D레
+	else if (name == 'E') T = 328; // E미
+	else if (name == 'F') T = 370; // F#파
+	else if (name == 'G') T = 392; // G솔
+	else if (name == 'A') T = 440; // A라
+	else if (name == 'B') T = 494; // B시
+	else  T = 523; // C도
+	return T;
+}
+
+int main() {
+	ifstream xx("my.wav", ios::binary | ios::in);
+	if (!xx) return 999;  // if the file is not found
+	char header[44];
+	// Sprint 1
+	xx.read(header, 44);
+	int* sampleRate = (int*)(header + 24);
+	cout << "   sampleRate = " << *sampleRate << endl;
+	short* n;   n = (short*)(header + 22);  cout << *n << endl; // numChannels
+	int* fs;   fs = (int*)(header + 24);  cout << *fs << endl; // sampleRate
+	int* b;   b = (int*)(header + 28);  cout << *b << endl;  //  byteRate
+	*n = 1;
+
+	
+	int N = fs[0]*10; // samples for 10 seconds
+	short* data;
+	data = new short[N]; // allocate memory for 10 seconds mono
+	const float pi = 3.141592;
+
+	ofstream yy("Koreansong.wav", ios::binary | ios::out);
+	if (!yy) return 666;  
+	yy.write(header, 44 * sizeof(char)); // 헤더를 쓴다. 
+	ifstream zz("korea.txt", ios::binary | ios::in);
+	if (!xx) return 999;
+	int m, eu;
+	char hh;
+	float dt, f, T, a = 10000.;
+	zz >> m; // 음표가 몇 개인지 읽기
+	float t = 0;
+	for (int k = 0; k < m; k++) {
+		zz >> eu >> hh;  // eu 는 int이고, hh는 char
+
+		f = getfrequency(hh);    // 주파수가 return 되는 함수
+		T = getLength(eu);       // 시간이 return되는 함수
+		
+		int nnn = fs[0] * T;
+		dt = T / nnn; 
+		
+
+
+		for (int i = 0; i < nnn; t += dt, i++) {
+			data[i] = (short)(a * sin(2.0 * pi * f * t));
+		}
+		
+		yy.write((char*)data, nnn * sizeof(short)); /// nnn크기 맞추기
+	}
+	
+	
+	yy.close();
+	return 1;
+}
